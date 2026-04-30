@@ -73,6 +73,19 @@ void FurnaceGUI::drawRegView() {
           ImGui::EndTable();
         }
         ImGui::PopFont();
+
+        char fname[256];
+        snprintf(fname, sizeof(fname), "regs_sys%d.bin", i);
+        FILE* f = fopen(fname, "wb");
+        if (f) {
+          uint32_t hdr_size = size;
+          uint32_t hdr_depth = depth;
+          fwrite(&hdr_size, sizeof(hdr_size), 1, f);
+          fwrite(&hdr_depth, sizeof(hdr_depth), 1, f);
+          size_t elem_bytes = depth / 8;
+          fwrite(regPool, elem_bytes, size, f);
+          fclose(f);
+        }
       }
     }
   }
