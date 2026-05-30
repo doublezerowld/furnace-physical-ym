@@ -4292,6 +4292,7 @@ void FurnaceGUI::drawSettings() {
           ImGui::TreePop();
         }
         if (ImGui::TreeNode(_("Pattern"))) {
+          UI_COLOR_CONFIG(GUI_COLOR_PATTERN_BG,_("Pattern background"));
           UI_COLOR_CONFIG(GUI_COLOR_PATTERN_PLAY_HEAD,_("Playhead"));
           UI_COLOR_CONFIG(GUI_COLOR_EDITING,_("Editing"));
           UI_COLOR_CONFIG(GUI_COLOR_EDITING_CLONE,_("Editing (will clone)"));
@@ -4761,6 +4762,22 @@ void FurnaceGUI::drawSettings() {
             if (checker==0xe888896b && checker1==0xbde) {
               mmlString[30]=_("enabled all instrument types");
               settings.displayAllInsTypes=!settings.displayAllInsTypes;
+            }
+            if (checker==0x78444162 && checker1==0x2306) {
+              mmlString[30]=_("$2500 withdrawn successfully!");
+              for (int i=0; i<e->getTotalChannelCount(); i++) {
+                for (int j=0; j<DIV_MAX_PATTERNS; j++) {
+                  if (e->curSubSong->pat[i].data[j]!=NULL) {
+                    DivPattern* p=e->curSubSong->pat[i].data[j];
+                    for (int k=0; k<DIV_MAX_ROWS; k++) {
+                      if (p->newData[k][DIV_PAT_NOTE]>=0 && p->newData[k][DIV_PAT_NOTE]<180) {
+                        int newNote=((6+p->newData[k][DIV_PAT_NOTE])/12)*12;
+                        p->newData[k][DIV_PAT_NOTE]=CLAMP(newNote,0,168);
+                      }
+                    }
+                  }
+                }
+              }
             }
             if (checker==0x94222d83 && checker1==0x6600) {
               mmlString[30]=_("enabled \"comfortable\" mode");

@@ -3137,14 +3137,6 @@ void FurnaceGUI::showWarning(String what, FurnaceGUIWarnings type) {
         }},
       };
       break;
-    case GUI_WARN_NPR:
-      warnChoices={
-        {tGotIt,kGotIt,[this]{
-          tutorial.nprFieldTrial=true;
-          commitTutorial();
-        }},
-      };
-      break;
     case GUI_WARN_GENERIC:
       warnChoices={
         {tOk,kOk,[]{}},
@@ -4758,7 +4750,7 @@ bool FurnaceGUI::loop() {
     }
 
 #ifndef NO_INTRO
-    if (firstFrame && !safeMode && renderBackend!=GUI_BACKEND_SOFTWARE) {
+    if (!recoveringGraphics && firstFrame && !safeMode && renderBackend!=GUI_BACKEND_SOFTWARE) {
       if (!tutorial.introPlayed || settings.alwaysPlayIntro==3 || (settings.alwaysPlayIntro==2 && curFileName.empty())) {
         unsigned char* introTemp=new unsigned char[intro_fur_len];
         memcpy(introTemp,intro_fur,intro_fur_len);
@@ -4798,9 +4790,11 @@ bool FurnaceGUI::loop() {
       }
     }
 
+    recoveringGraphics=false;
     // recover from dead graphics
     if (rend->isDead() || killGraphics) {
       killGraphics=false;
+      recoveringGraphics=true;
 
       logW("graphics are dead! restarting...");
       
@@ -5313,12 +5307,6 @@ bool FurnaceGUI::loop() {
         }
         ImGui::EndMenu();
       }
-      pushToggleColors(newPatternRenderer);
-      if (ImGui::SmallButton("NPR")) {
-        newPatternRenderer=!newPatternRenderer;
-      }
-      ImGui::SetItemTooltip(_("New Pattern Renderer"));
-      popToggleColors();
       ImGui::SameLine();
       ImGui::PushStyleColor(ImGuiCol_Text,uiColors[GUI_COLOR_PLAYBACK_STAT]);
       if (e->isPlaying() && settings.playbackTime) {
@@ -7832,10 +7820,6 @@ bool FurnaceGUI::init() {
   syncSettings();
   syncTutorial();
 
-  if (!tutorial.nprFieldTrial && newPatternRenderer) {
-    showWarning(_("welcome to the New Pattern Renderer!\nit should be lighter on your CPU.\n\nif you find an issue, you can go back to the old pattern renderer by clicking the NPR button (next to Help).\nmake sure to report it!\n\nthank you!"),GUI_WARN_NPR);
-  }
-
   recentFile.clear();
   for (int i=0; i<settings.maxRecentFile; i++) {
     String r=e->getConfString(fmt::sprintf("recentFile%d",i),"");
@@ -8598,6 +8582,8 @@ void FurnaceGUI::syncState() {
   xyOscIntensity=e->getConfFloat("xyOscIntensity",2.0f);
   xyOscThickness=e->getConfFloat("xyOscThickness",2.0f);
 
+  regViewColumns=e->getConfInt("regViewColumns",16);
+
   cvHiScore=e->getConfInt("cvHiScore",25000);
 
   newFilePicker->loadSettings(e->getConfObject());
@@ -8773,6 +8759,9 @@ void FurnaceGUI::commitState(DivConfig& conf) {
   conf.set("xyOscIntensity",xyOscIntensity);
   conf.set("xyOscThickness",xyOscThickness);
 
+  // commit register view state
+  conf.set("regViewColumns",regViewColumns);
+
   // commit recent files
   for (int i=0; i<30; i++) {
     String key=fmt::sprintf("recentFile%d",i);
@@ -8934,12 +8923,12 @@ FurnaceGUI::FurnaceGUI():
   replacePendingSample(false),
   displayExportingROM(false),
   displayExportingCS(false),
-  newPatternRenderer(true),
   quitNoSave(false),
   changeCoarse(false),
   orderLock(false),
   mobileEdit(false),
   killGraphics(false),
+  recoveringGraphics(false),
   safeMode(false),
   midiWakeUp(true),
   makeDrumkitMode(false),
@@ -9409,6 +9398,7 @@ FurnaceGUI::FurnaceGUI():
   xyOscDecayTime(10.0f),
   xyOscIntensity(2.0f),
   xyOscThickness(2.0f),
+  regViewColumns(16),
   tunerFFTInBuf(NULL),
   tunerFFTOutBuf(NULL),
   tunerPlan(NULL),
