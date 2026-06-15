@@ -142,7 +142,8 @@ void DivPlatformPokeMini::tick(bool sysTick) {
       chan[i].freqChanged=true;
     }
     if (chan[i].freqChanged || chan[i].keyOn || chan[i].keyOff) {
-      chan[i].freq=chan[i].calcFreq()-1;
+      chan[i].freq=chan[i].calcFreq();
+      if (!chan[i].rawFreq) chan[i].freq--;
       if (chan[i].freq<0) chan[i].freq=0;
       if (chan[i].freq>65535) chan[i].freq=65535;
       if (chan[i].keyOn) {
@@ -339,6 +340,10 @@ void DivPlatformPokeMini::notifyInsDeletion(void* ins) {
 
 void DivPlatformPokeMini::notifyPitchTable(int sample) {
   pitchTable.init(parent->song.tuning,chipClock,CHIP_DIVIDER,0xffff,true,parent->song.compatFlags.linearPitch);
+}
+
+unsigned int DivPlatformPokeMini::getMaxFreq(int ch) {
+  return 0xffff;
 }
 
 void DivPlatformPokeMini::poke(unsigned int addr, unsigned short val) {

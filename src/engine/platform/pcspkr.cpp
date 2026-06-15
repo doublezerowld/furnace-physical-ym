@@ -437,7 +437,8 @@ void DivPlatformPCSpeaker::tick(bool sysTick) {
       chan[i].freqChanged=true;
     }
     if (chan[i].freqChanged || chan[i].keyOn || chan[i].keyOff) {
-      chan[i].freq=chan[i].calcFreq()-1;
+      chan[i].freq=chan[i].calcFreq();
+      if (!chan[i].rawFreq) chan[i].freq--;
       if (chan[i].freq<0) chan[i].freq=0;
       if (chan[i].freq>65535) chan[i].freq=65535;
       if (!chan[i].std.vol.had) {
@@ -724,6 +725,10 @@ void DivPlatformPCSpeaker::notifyInsDeletion(void* ins) {
 
 void DivPlatformPCSpeaker::notifyPitchTable(int sample) {
   pitchTable.init(parent->song.tuning,chipClock,CHIP_DIVIDER,0xffff,true,parent->song.compatFlags.linearPitch);
+}
+
+unsigned int DivPlatformPCSpeaker::getMaxFreq(int ch) {
+  return 0xffff;
 }
 
 void DivPlatformPCSpeaker::notifyPlaybackStop() {

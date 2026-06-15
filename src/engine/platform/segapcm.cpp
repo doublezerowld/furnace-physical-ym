@@ -124,6 +124,7 @@ void DivPlatformSegaPCM::tick(bool sysTick) {
       // TODO: consider oldSlides
       chan[i].freq=chan[i].calcFreq();
 
+      // TODO: convert 20xx effect to raw frequency notes?
       if (chan[i].pcm.freq==-1) {
         chan[i].pcm.freq=chan[i].freq;
         rWrite(7+(i<<3),chan[i].pcm.freq);
@@ -373,6 +374,10 @@ void DivPlatformSegaPCM::notifyPitchTable(int sample) {
   samplePitchTable.update<Channel>(chan,16,parent->song.tuning,chipClock,CHIP_FREQBASE,0xff,false,parent->song.compatFlags.linearPitch,sample);
 }
 
+// TODO: convert 20xx effects to raw frequency notes
+unsigned int DivPlatformSegaPCM::getMaxFreq(int ch) {
+  return 0xff;
+}
 
 SharedChannel* DivPlatformSegaPCM::getChanState(int ch) {
   return &chan[ch];

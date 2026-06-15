@@ -150,7 +150,8 @@ void DivPlatformYMZ280B::tick(bool sysTick) {
         case DIV_SAMPLE_DEPTH_16BIT: ctrl=0x60; break;
         default: ctrl=0;
       }
-      chan[i].freq=chan[i].calcFreq()-1;
+      chan[i].freq=chan[i].calcFreq();
+      if (!chan[i].rawFreq) chan[i].freq--;
       if (chan[i].freq<0) chan[i].freq=0;
       if (chan[i].freq>511) chan[i].freq=511;
       // ADPCM has half the range
@@ -421,6 +422,10 @@ void DivPlatformYMZ280B::notifyInsDeletion(void* ins) {
 
 void DivPlatformYMZ280B::notifyPitchTable(int sample) {
   samplePitchTable.update<Channel>(chan,8,parent->song.tuning,chipClock,CHIP_FREQBASE/256.0,0x200,false,parent->song.compatFlags.linearPitch,sample);
+}
+
+unsigned int DivPlatformYMZ280B::getMaxFreq(int ch) {
+  return 0x1ff;
 }
 
 
